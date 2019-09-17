@@ -1,4 +1,4 @@
-(defproject sample-1 "0.1.0-SNAPSHOT"
+(defproject sample-1 "0.2.0-SNAPSHOT"
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
@@ -124,8 +124,8 @@
                      {:output-to "target/test.js"
                       :main "sample-1.doo-runner"
                       :optimizations :whitespace
-                      :pretty-print true}}}}
+                      :pretty-print true}}}}}
                   
-                  }
+
    :profiles/dev {}
    :profiles/test {}})

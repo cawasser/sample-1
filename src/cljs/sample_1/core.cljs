@@ -38,10 +38,24 @@
   [:section.section>div.container>div.content
    [:img {:src "/img/warning_clojure.png"}]])
 
+
+(def answer-1 (r/atom 0))
+(def answer-2 (r/atom 0))
+(def answer-3 (r/atom 0))
+
+
+(defn get-answer [x y a]
+  (POST "/api/math/plus"
+       {:headers {"Accept" "application/transit+json"}
+        :params {:x x :y y}
+        :handler #(reset! a (:total %))}))
+
+
 (defn home-page []
   [:section.section>div.container>div.content
-   (when-let [docs (:docs @session)]
-     [:div {:dangerouslySetInnerHTML {:__html (md->html docs)}}])])
+   [:p " 5 + 18 = " @answer-1]
+   [:p " 9 + 3 = " @answer-2]
+   [:p " 2 + 19 = " @answer-3]])
 
 (def pages
   {:home #'home-page
@@ -86,5 +100,10 @@
 (defn init! []
   (ajax/load-interceptors!)
   (fetch-docs!)
+
+  (get-answer 5 18 answer-1)
+  (get-answer 9 3 answer-2)
+  (get-answer 2 19 answer-3)
+
   (hook-browser-navigation!)
   (mount-components))
