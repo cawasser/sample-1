@@ -39,23 +39,35 @@
    [:img {:src "/img/warning_clojure.png"}]])
 
 
-(def answer-1 (r/atom 0))
-(def answer-2 (r/atom 0))
-(def answer-3 (r/atom 0))
+(def answer-1 (r/atom {:x 5 :y 18 :total 0}))
+(def answer-2 (r/atom {:x 9 :y 3 :total 0}))
+(def answer-3 (r/atom {:x 2 :y 19 :total 0}))
+
+
+(defn- set-total [a r]
+  (swap! a assoc :total (:total r)))
+
+
+(defn- make-row [x]
+  [:tr
+   [:td (str (:x x))] [:td "+"] [:td (str (:y x))] [:td "="] [:td (str (:total x))]])
+
 
 
 (defn get-answer [x y a]
   (POST "/api/math/plus"
        {:headers {"Accept" "application/transit+json"}
         :params {:x x :y y}
-        :handler #(reset! a (:total %))}))
+        :handler #(set-total a %)}))
 
 
 (defn home-page []
   [:section.section>div.container>div.content
-   [:p " 5 + 18 = " @answer-1]
-   [:p " 9 + 3 = " @answer-2]
-   [:p " 2 + 19 = " @answer-3]])
+   [:table
+    [:tbody
+     (make-row @answer-1)
+     (make-row @answer-2)
+     (make-row @answer-3)]]])
 
 (def pages
   {:home #'home-page
