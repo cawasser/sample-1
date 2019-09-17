@@ -1,4 +1,4 @@
-(defproject sample-1 "0.2.0-SNAPSHOT"
+(defproject sample-1 "0.4.0-SNAPSHOT"
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
@@ -33,7 +33,7 @@
                  [selmer "1.12.12"]]
 
   :min-lein-version "2.0.0"
-  
+
   :source-paths ["src/clj" "src/cljs" "src/cljc"]
   :test-paths ["test/clj"]
   :resource-paths ["resources" "target/cljsbuild"]
@@ -50,7 +50,7 @@
    :nrepl-port 7002
    :css-dirs ["resources/public/css"]
    :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
-  
+
 
   :profiles
   {:uberjar {:omit-source true
@@ -69,8 +69,8 @@
                  :closure-warnings
                  {:externs-validation :off :non-standard-jsdoc :off}
                  :externs ["react/externs/react.js"]}}}}
-             
-             
+
+
              :aot :all
              :uberjar-name "sample-1.jar"
              :source-paths ["env/prod/clj"]
@@ -105,9 +105,9 @@
                       :source-map true
                       :optimizations :none
                       :pretty-print true}}}}
-                  
-                  
-                  
+
+
+
                   :doo {:build "test"}
                   :source-paths ["env/dev/clj"]
                   :resource-paths ["env/dev/resources"]
@@ -125,7 +125,7 @@
                       :main "sample-1.doo-runner"
                       :optimizations :whitespace
                       :pretty-print true}}}}}
-                  
+
 
    :profiles/dev {}
    :profiles/test {}})

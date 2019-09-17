@@ -43,31 +43,55 @@
 (def answer-2 (r/atom {:x 9 :y 3 :total 0}))
 (def answer-3 (r/atom {:x 2 :y 19 :total 0}))
 
-
 (defn- set-total [a r]
+  (prn "set-total" a r)
   (swap! a assoc :total (:total r)))
 
 
-(defn- make-row [x]
-  [:tr
-   [:td (str (:x x))] [:td "+"] [:td (str (:y x))] [:td "="] [:td (str (:total x))]])
-
-
-
-(defn get-answer [x y a]
+(defn get-answer
+  [x y a]
+  (prn "posting" x y a)
   (POST "/api/math/plus"
        {:headers {"Accept" "application/transit+json"}
         :params {:x x :y y}
         :handler #(set-total a %)}))
 
 
+(defn- parse-int [x]
+  ())
+
+
+(defn input-field [tag id data]
+  [:div.field
+   [tag
+    {:type :number
+     :value (id @data)
+     :placeholder (name id)
+     :on-change #(do
+                   (prn "change" id (-> % .-target .-value))
+                   (swap! data
+                          assoc
+                          id (js/parseInt (-> % .-target .-value)))
+                   (get-answer (:x @data) (:y @data ) data))}]])
+
+
+(defn- make-row [data]
+  [:tr
+   [:td [input-field :input.input :x data]]
+   [:td "+"]
+   [:td [input-field :input.input :y data]]
+   [:td "="]
+   [:td (str (:total @data))]])
+
+
+
 (defn home-page []
   [:section.section>div.container>div.content
    [:table
     [:tbody
-     (make-row @answer-1)
-     (make-row @answer-2)
-     (make-row @answer-3)]]])
+     (make-row answer-1)
+     (make-row answer-2)
+     (make-row answer-3)]]])
 
 (def pages
   {:home #'home-page
