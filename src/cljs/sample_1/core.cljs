@@ -39,22 +39,40 @@
    [:img {:src "/img/warning_clojure.png"}]])
 
 
-(def answer-1 (r/atom {:x 5 :y 18 :total 0}))
-(def answer-2 (r/atom {:x 9 :y 3 :total 0}))
-(def answer-3 (r/atom {:x 2 :y 19 :total 0}))
+(def answer-1 (r/atom {:x 5 :y 18 :op "+" :total 0}))
+(def answer-2 (r/atom {:x 9 :y 3 :op "+" :total 0}))
+(def answer-3 (r/atom {:x 2 :y 19 :op "+" :total 0}))
 
 (defn- set-total [a r]
   (prn "set-total" a r)
   (swap! a assoc :total (:total r)))
 
+(defn- set-operator [a r]
+  (prn "set-operator" a r)
+  (swap! a assoc :op r)
+  (prn "   after" a))
 
 (defn get-answer
-  [x y a]
-  (prn "posting" x y a)
-  (POST "/api/math/plus"
-       {:headers {"Accept" "application/transit+json"}
-        :params {:x x :y y}
-        :handler #(set-total a %)}))
+  [a]
+  (let [x (:x @a) y (:y @a) op (:op @a)]
+    (prn "posting" x y op a)
+    (cond
+      (= op "+") (POST "/api/math/plus"
+                   {:headers {"Accept" "application/transit+json"}
+                    :params {:x x :y y}
+                    :handler #(set-total a %)})
+      (= op "-") (POST "/api/math/minus"
+                   {:headers {"Accept" "application/transit+json"}
+                    :params {:x x :y y}
+                    :handler #(set-total a %)})
+      (= op "*") (POST "/api/math/mult"
+                   {:headers {"Accept" "application/transit+json"}
+                    :params {:x x :y y}
+                    :handler #(set-total a %)})
+      (= op "/") (POST "/api/math/div"
+                   {:headers {"Accept" "application/transit+json"}
+                    :params {:x x :y y}
+                    :handler #(set-total a %)}))))
 
 
 (defn- parse-int [x]
@@ -72,13 +90,19 @@
                    (swap! data
                           assoc
                           id (js/parseInt (-> % .-target .-value)))
-                   (get-answer (:x @data) (:y @data ) data))}]])
+                   (get-answer data))}]])
 
 
 (defn- make-row [data]
   [:tr
    [:td [input-field :input.input :x data]]
-   [:td "+"]
+   [:td [:select {:on-change #(do
+                                (set-operator data (-> % .-target .-value))
+                                (get-answer data))}
+         [:option "+"]
+         [:option "-"]
+         [:option "*"]
+         [:option "/"]]]
    [:td [input-field :input.input :y data]]
    [:td "="]
    [:td (str (:total @data))]])
@@ -137,9 +161,9 @@
   (ajax/load-interceptors!)
   (fetch-docs!)
 
-  (get-answer 5 18 answer-1)
-  (get-answer 9 3 answer-2)
-  (get-answer 2 19 answer-3)
+  (get-answer answer-1)
+  (get-answer answer-2)
+  (get-answer answer-3)
 
   (hook-browser-navigation!)
   (mount-components))
