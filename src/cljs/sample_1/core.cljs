@@ -39,83 +39,97 @@
    [:img {:src "/img/warning_clojure.png"}]])
 
 
-(def answer-1 (r/atom {:x 5 :y 18 :op "+" :total 0}))
-(def answer-2 (r/atom {:x 9 :y 3 :op "+" :total 0}))
-(def answer-3 (r/atom {:x 2 :y 19 :op "+" :total 0}))
-
-(defn- set-total [a r]
-  (prn "set-total" a r)
-  (swap! a assoc :total (:total r)))
-
-(defn- set-operator [a r]
-  (prn "set-operator" a r)
-  (swap! a assoc :op r)
-  (prn "   after" a))
-
-(defn get-answer
-  [a]
-  (let [x (:x @a) y (:y @a) op (:op @a)]
-    (prn "posting" x y op a)
-    (cond
-      (= op "+") (POST "/api/math/plus"
-                   {:headers {"Accept" "application/transit+json"}
-                    :params {:x x :y y}
-                    :handler #(set-total a %)})
-      (= op "-") (POST "/api/math/minus"
-                   {:headers {"Accept" "application/transit+json"}
-                    :params {:x x :y y}
-                    :handler #(set-total a %)})
-      (= op "*") (POST "/api/math/mult"
-                   {:headers {"Accept" "application/transit+json"}
-                    :params {:x x :y y}
-                    :handler #(set-total a %)})
-      (= op "/") (POST "/api/math/div"
-                   {:headers {"Accept" "application/transit+json"}
-                    :params {:x x :y y}
-                    :handler #(set-total a %)}))))
 
 
-(defn- parse-int [x]
-  ())
+(def empty-eq {:x 1 :y 1 :op "+" :total 2})
+
+(def answers* (r/atom [{:x 5 :y 18 :op "+" :total 0}
+                       {:x 9 :y 3 :op "+" :total 0}
+                       {:x 2 :y 19 :op "+" :total 0}]))
+
+(defn- new-equation []
+  (reset! answers* (conj @answers* empty-eq)))
 
 
-(defn input-field [tag id data]
+(defn- set-key* [idx k new-val]
+  (prn "set-key*" idx k new-val)
+  (reset! answers* (assoc-in @answers* [idx k] new-val))
+  (prn "now: " @answers*))
+
+
+
+(defn get-answer* [idx]
+  (prn "get-answer*" idx)
+
+  (let [data (get @answers* idx)
+        x (:x data) y (:y data) op (:op data)]
+   (prn "posting" x y op data)
+   (cond
+     (= op "+") (POST "/api/math/plus"
+                  {:headers {"Accept" "application/transit+json"}
+                   :params {:x x :y y}
+                   :handler #(set-key* idx :total (:total %))})
+
+     (= op "-") (POST "/api/math/minus"
+                  {:headers {"Accept" "application/transit+json"}
+                   :params {:x x :y y}
+                   :handler #(set-key* idx :total (:total %))})
+
+     (= op "*") (POST "/api/math/mult"
+                  {:headers {"Accept" "application/transit+json"}
+                   :params {:x x :y y}
+                   :handler #(set-key* idx :total (:total %))})
+
+     (= op "/") (POST "/api/math/div"
+                  {:headers {"Accept" "application/transit+json"}
+                   :params {:x x :y y}
+                   :handler #(set-key* idx :total (:total %))}))))
+
+
+
+(defn input-field [tag id idx data]
   [:div.field
    [tag
     {:type :number
-     :value (id @data)
+     :value (id data)
      :placeholder (name id)
      :on-change #(do
-                   (prn "change" id (-> % .-target .-value))
-                   (swap! data
-                          assoc
-                          id (js/parseInt (-> % .-target .-value)))
-                   (get-answer data))}]])
+                   (prn "clicked " id idx)
+                   (set-key* idx id (js/parseInt (-> % .-target .-value)))
+                   (get-answer* idx))}]])
 
 
-(defn- make-row [data]
+(defn- make-row [idx data]
+  ^{:key idx}
   [:tr
-   [:td [input-field :input.input :x data]]
+   [:td (str idx)]
+   [:td [input-field :input.input :x idx data]]
    [:td [:select {:on-change #(do
-                                (set-operator data (-> % .-target .-value))
-                                (get-answer data))}
+                                (prn "clicked :op " idx)
+                                (set-key* idx :op (-> % .-target .-value))
+                                (get-answer* idx))}
          [:option "+"]
          [:option "-"]
          [:option "*"]
          [:option "/"]]]
-   [:td [input-field :input.input :y data]]
+   [:td [input-field :input.input :y idx data]]
    [:td "="]
-   [:td (str (:total @data))]])
+   [:td (str (:total data))]])
 
 
 
 (defn home-page []
   [:section.section>div.container>div.content
+   [:div.button.is-medium {:on-click #(new-equation)} [:i.material-icons.has-text-success :fiber_new]]
    [:table
     [:tbody
-     (make-row answer-1)
-     (make-row answer-2)
-     (make-row answer-3)]]])
+     (doall
+       (for [idx (range (count @answers*))]
+         (let [data (get @answers* idx)]
+           ;(prn data)
+           (make-row idx data))))]]])
+
+
 
 (def pages
   {:home #'home-page
@@ -161,9 +175,11 @@
   (ajax/load-interceptors!)
   (fetch-docs!)
 
-  (get-answer answer-1)
-  (get-answer answer-2)
-  (get-answer answer-3)
+  (prn "getting data" (count @answers*))
+
+  (doall
+    (for [idx (range (count @answers*))]
+      (get-answer* idx)))
 
   (hook-browser-navigation!)
   (mount-components))
