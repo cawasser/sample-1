@@ -20,19 +20,19 @@
 
 (defn navbar []
   (r/with-let [expanded? (r/atom false)]
-    [:nav.navbar.is-info>div.container
-     [:div.navbar-brand
-      [:a.navbar-item {:href "/" :style {:font-weight :bold}} "sample-1"]
-      [:span.navbar-burger.burger
-       {:data-target :nav-menu
-        :on-click #(swap! expanded? not)
-        :class (when @expanded? :is-active)}
-       [:span][:span][:span]]]
-     [:div#nav-menu.navbar-menu
-      {:class (when @expanded? :is-active)}
-      [:div.navbar-end
-       [nav-link "#/" "Home" :home]
-       [nav-link "#/about" "About" :about]]]]))
+              [:nav.navbar.is-info>div.container
+               [:div.navbar-brand
+                [:a.navbar-item {:href "/" :style {:font-weight :bold}} "sample-1"]
+                [:span.navbar-burger.burger
+                 {:data-target :nav-menu
+                  :on-click    #(swap! expanded? not)
+                  :class       (when @expanded? :is-active)}
+                 [:span] [:span] [:span]]]
+               [:div#nav-menu.navbar-menu
+                {:class (when @expanded? :is-active)}
+                [:div.navbar-end
+                 [nav-link "#/" "Home" :home]
+                 [nav-link "#/about" "About" :about]]]]))
 
 (defn about-page []
   [:section.section>div.container>div.content
@@ -62,41 +62,53 @@
   (prn "get-answer*" idx)
 
   (let [data (get @answers* idx)
-        x (:x data) y (:y data) op (:op data)]
-   (prn "posting" x y op data)
-   (cond
-     (= op "+") (POST "/api/math/plus"
-                  {:headers {"Accept" "application/transit+json"}
-                   :params {:x x :y y}
-                   :handler #(set-key* idx :total (:total %))})
+        x    (:x data) y (:y data) op (:op data)]
+    (prn "posting" x y op data)
+    (cond
+      (= op "+") (POST "/api/math/plus"
+                       {:headers {"Accept" "application/transit+json"}
+                        :params {:x x :y y}
+                        :handler #(set-key* idx :total (:total %))})
 
-     (= op "-") (POST "/api/math/minus"
-                  {:headers {"Accept" "application/transit+json"}
-                   :params {:x x :y y}
-                   :handler #(set-key* idx :total (:total %))})
+      (= op "-") (POST "/api/math/minus"
+                       {:headers {"Accept" "application/transit+json"}
+                        :params {:x x :y y}
+                        :handler #(set-key* idx :total (:total %))})
 
-     (= op "*") (POST "/api/math/mult"
-                  {:headers {"Accept" "application/transit+json"}
-                   :params {:x x :y y}
-                   :handler #(set-key* idx :total (:total %))})
+      (= op "*") (POST "/api/math/mult"
+                       {:headers {"Accept" "application/transit+json"}
+                        :params {:x x :y y}
+                        :handler #(set-key* idx :total (:total %))})
 
-     (= op "/") (POST "/api/math/div"
-                  {:headers {"Accept" "application/transit+json"}
-                   :params {:x x :y y}
-                   :handler #(set-key* idx :total (:total %))}))))
+      (= op "/") (POST "/api/math/div"
+                       {:headers {"Accept" "application/transit+json"}
+                        :params {:x x :y y}
+                        :handler #(set-key* idx :total (:total %))}))))
 
 
 
 (defn input-field [tag id idx data]
   [:div.field
    [tag
-    {:type :number
-     :value (id data)
+    {:type        :number
+     :value       (id data)
      :placeholder (name id)
-     :on-change #(do
-                   (prn "clicked " id idx)
-                   (set-key* idx id (js/parseInt (-> % .-target .-value)))
-                   (get-answer* idx))}]])
+     :on-change   #(do
+                     (prn "clicked " id idx)
+                     (set-key* idx id (js/parseInt (-> % .-target .-value)))
+                     (get-answer* idx))}]])
+
+
+(defn colored-field [data]
+  [:td {:style
+        {:background-color
+         (cond
+           (and (<= 0 data) (< data 20)) "lightgreen"
+
+           (and (<= 20 data) (< data 50)) "lightblue"
+
+           (<= 50 data) "lightsalmon")}}
+   (str data)])
 
 
 (defn- make-row [idx data]
@@ -114,7 +126,8 @@
          [:option "/"]]]
    [:td [input-field :input.input :y idx data]]
    [:td "="]
-   [:td (str (:total data))]])
+   (colored-field (:total data))])
+
 
 
 
@@ -132,7 +145,7 @@
 
 
 (def pages
-  {:home #'home-page
+  {:home  #'home-page
    :about #'about-page})
 
 (defn page []
