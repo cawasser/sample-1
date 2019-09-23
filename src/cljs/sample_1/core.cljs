@@ -100,14 +100,13 @@
 
 
 (defn colored-field [data]
-  [:td {:style
-        {:background-color
-         (cond
-           (and (<= 0 data) (< data 20)) "lightgreen"
+  [:td {:class
+        (cond
+          (and (<= 0 data) (< data 20)) "small-result"
 
-           (and (<= 20 data) (< data 50)) "lightblue"
+          (and (<= 20 data) (< data 50)) "medium-result"
 
-           (<= 50 data) "lightsalmon")}}
+          (<= 50 data) "large-result")}
    (str data)])
 
 
