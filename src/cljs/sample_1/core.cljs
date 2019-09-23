@@ -67,22 +67,22 @@
     (cond
       (= op "+") (POST "/api/math/plus"
                        {:headers {"Accept" "application/transit+json"}
-                        :params {:x x :y y}
+                        :params  {:x x :y y}
                         :handler #(set-key* idx :total (:total %))})
 
       (= op "-") (POST "/api/math/minus"
                        {:headers {"Accept" "application/transit+json"}
-                        :params {:x x :y y}
+                        :params  {:x x :y y}
                         :handler #(set-key* idx :total (:total %))})
 
       (= op "*") (POST "/api/math/mult"
                        {:headers {"Accept" "application/transit+json"}
-                        :params {:x x :y y}
+                        :params  {:x x :y y}
                         :handler #(set-key* idx :total (:total %))})
 
       (= op "/") (POST "/api/math/div"
                        {:headers {"Accept" "application/transit+json"}
-                        :params {:x x :y y}
+                        :params  {:x x :y y}
                         :handler #(set-key* idx :total (:total %))}))))
 
 
@@ -100,14 +100,13 @@
 
 
 (defn colored-field [data]
-  [:td {:class
-        (cond
-          (and (<= 0 data) (< data 20)) "small-result"
+  (cond
+    (and (<= 0 data) (< data 20)) [:td.small-result (str data)]
 
-          (and (<= 20 data) (< data 50)) "medium-result"
+    (and (<= 20 data) (< data 50)) [:td.medium-result (str data)]
 
-          (<= 50 data) "large-result")}
-   (str data)])
+    (<= 50 data) [:td.large-result (str data)]))
+
 
 
 (defn- make-row [idx data]
