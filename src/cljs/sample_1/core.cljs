@@ -10,6 +10,14 @@
     [clojure.string :as string])
   (:import goog.History))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Comment block to test git merging
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
 (defonce session (r/atom {:page :home}))
 
 (defn nav-link [uri title page]
