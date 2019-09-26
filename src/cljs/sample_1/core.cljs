@@ -49,49 +49,35 @@
 
 
 
-(def empty-eq {:x 1 :y 1 :op "+" :total 2})
+(defonce empty-eq {:x 1 :y 1 :op "+" :total 2})
 
-(def answers* (r/atom [{:x 5 :y 18 :op "+" :total 0}
-                       {:x 9 :y 3 :op "+" :total 0}
-                       {:x 2 :y 19 :op "+" :total 0}]))
+(defonce answers* (r/atom [{:x 5 :y 18 :op "+" :total 0}
+                           {:x 9 :y 3 :op "+" :total 0}
+                           {:x 2 :y 19 :op "+" :total 0}]))
 
 (defn- new-equation []
-  (reset! answers* (conj @answers* empty-eq)))
+  (swap! answers* conj empty-eq))
 
 
 (defn- set-key* [idx k new-val]
-  (prn "set-key*" idx k new-val)
-  (reset! answers* (assoc-in @answers* [idx k] new-val))
-  (prn "now: " @answers*))
+  (swap! answers* assoc-in [idx k] new-val))
 
 
 
 (defn get-answer* [idx]
-  (prn "get-answer*" idx)
-
   (let [data (get @answers* idx)
-        x    (:x data) y (:y data) op (:op data)]
-    (prn "posting" x y op data)
-    (cond
-      (= op "+") (POST "/api/math/plus"
-                       {:headers {"Accept" "application/transit+json"}
-                        :params  {:x x :y y}
-                        :handler #(set-key* idx :total (:total %))})
-
-      (= op "-") (POST "/api/math/minus"
-                       {:headers {"Accept" "application/transit+json"}
-                        :params  {:x x :y y}
-                        :handler #(set-key* idx :total (:total %))})
-
-      (= op "*") (POST "/api/math/mult"
-                       {:headers {"Accept" "application/transit+json"}
-                        :params  {:x x :y y}
-                        :handler #(set-key* idx :total (:total %))})
-
-      (= op "/") (POST "/api/math/div"
-                       {:headers {"Accept" "application/transit+json"}
-                        :params  {:x x :y y}
-                        :handler #(set-key* idx :total (:total %))}))))
+        x    (:x data) y (:y data) op (:op data)
+        path (str "/api/math/"
+                  (condp = op
+                           "+" "plus"
+                           "-" "minus"
+                           "*" "mult"
+                           "/" "div"))]
+    (prn "post " path)
+    (POST path
+          {:headers {"Accept" "application/transit+json"}
+           :params  {:x x :y y}
+           :handler #(set-key* idx :total (:total %))})))
 
 
 
@@ -107,13 +93,13 @@
                      (get-answer* idx))}]])
 
 
-(defn colored-field [data]
-  (cond
-    (and (<= 0 data) (< data 20)) [:td.small-result (str data)]
-
-    (and (<= 20 data) (< data 50)) [:td.medium-result (str data)]
-
-    (<= 50 data) [:td.large-result (str data)]))
+(defn colored-field [tag data]
+  [tag {:class (cond
+                 (< data 0) "negative-result"
+                 (and (<= 0 data) (< data 20)) "small-result"
+                 (and (<= 20 data) (< data 50)) "medium-result"
+                 (<= 50 data) "large-result")}
+   (str data)])
 
 
 
@@ -122,24 +108,23 @@
   [:tr
    [:td (str idx)]
    [:td [input-field :input.input :x idx data]]
-   [:td [:select {:on-change #(do
+   [:td [:select {:style     {:font-size :xx-large}
+                  :on-change #(do
                                 (prn "clicked :op " idx)
                                 (set-key* idx :op (-> % .-target .-value))
                                 (get-answer* idx))}
-         [:option "+"]
-         [:option "-"]
-         [:option "*"]
-         [:option "/"]]]
+         (map #(into ^{:key %} [:option %]) ["+" "-" "*" "/"])]]
    [:td [input-field :input.input :y idx data]]
    [:td "="]
-   (colored-field (:total data))])
+   (colored-field :td.result (:total data))])
 
 
 
 
 (defn home-page []
   [:section.section>div.container>div.content
-   [:div.button.is-medium {:on-click #(new-equation)} [:i.material-icons.has-text-success :fiber_new]]
+   [:div.button.is-medium.is-primary {:on-click #(new-equation)}
+    [:i.material-icons.is-medium :fiber_new]]
    [:table
     [:tbody
      (doall
@@ -183,8 +168,6 @@
 
 ;; -------------------------
 ;; Initialize app
-(defn fetch-docs! []
-  (GET "/docs" {:handler #(swap! session assoc :docs %)}))
 
 (defn mount-components []
   (r/render [#'navbar] (.getElementById js/document "navbar"))
@@ -192,9 +175,6 @@
 
 (defn init! []
   (ajax/load-interceptors!)
-  (fetch-docs!)
-
-  (prn "getting data" (count @answers*))
 
   (doall
     (for [idx (range (count @answers*))]

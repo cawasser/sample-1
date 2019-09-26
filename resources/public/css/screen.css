@@ -34,6 +34,11 @@ body {
 }
 
 
+.result {
+  font-weight: bold;
+  font-size: large;
+}
+
 .small-result {
   background-color: lightgreen;
 }
@@ -44,4 +49,9 @@ body {
 
 .large-result {
   background-color: lightsalmon;
+}
+
+.negative-result {
+  background-color: red;
+  color: white;
 }

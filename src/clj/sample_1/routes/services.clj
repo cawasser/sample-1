@@ -85,7 +85,7 @@
              :handler (fn [{{{:keys [x y]} :body} :parameters}]
                         (prn "div" x y)
                         {:status 200
-                         :body {:total (/ x y)}})}}]]
+                         :body {:total (quot x y)}})}}]]
 
    ["/files"
     {:swagger {:tags ["files"]}}
